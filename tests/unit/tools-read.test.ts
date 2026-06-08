@@ -76,4 +76,34 @@ describe("read tools", () => {
     const res = await callTool(server, "autify_describe_result", { project_id: 1, result_id: 9 });
     expect(res.isError).toBe(true);
   });
+
+  it("list_results assembles only the provided query params", async () => {
+    const get = vi.fn(async () => ({ data: { results: [] }, error: undefined, response: new Response("", { status: 200 }) }));
+    const server = new McpServer({ name: "t", version: "0" });
+    const ctx = createServerContext({ config, logger: createLogger("error", () => {}), client: fakeClient(get) });
+    registerReadTools(server, ctx);
+    await callTool(server, "autify_list_results", { project_id: 2, page: 1, per_page: 50, test_plan_id: 7 });
+    expect(get).toHaveBeenCalledWith("/projects/{project_id}/results", {
+      params: { path: { project_id: 2 }, query: { page: 1, per_page: 50, test_plan_id: 7 } },
+    });
+  });
+
+  it("falls back to the configured default project when project_id is omitted", async () => {
+    const get = vi.fn(async () => ({ data: { name: "p" }, error: undefined, response: new Response("", { status: 200 }) }));
+    const server = new McpServer({ name: "t", version: "0" });
+    const ctx = createServerContext({ config, logger: createLogger("error", () => {}), client: fakeClient(get) });
+    registerReadTools(server, ctx);
+    await callTool(server, "autify_get_project_info", {});
+    expect(get).toHaveBeenCalledWith("/projects/{project_id}/project_info", { params: { path: { project_id: 1 } } });
+  });
+
+  it("returns invalid_input when no project_id and no default are available", async () => {
+    const noDefault = { ...config, defaultProjectId: undefined };
+    const server = new McpServer({ name: "t", version: "0" });
+    const ctx = createServerContext({ config: noDefault, logger: createLogger("error", () => {}), client: fakeClient(vi.fn()) });
+    registerReadTools(server, ctx);
+    const res = await callTool(server, "autify_list_scenarios", {});
+    expect(res.isError).toBe(true);
+    expect(JSON.parse(res.content[0]!.text).code).toBe("invalid_input");
+  });
 });

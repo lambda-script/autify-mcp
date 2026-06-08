@@ -47,4 +47,30 @@ describe("execute tools", () => {
     expect(res.isError).toBeUndefined();
     expect(post).toHaveBeenCalledWith("/schedules/{schedule_id}", expect.objectContaining({ params: { path: { schedule_id: 42 } } }));
   });
+
+  it("execute_schedule forwards a nullable autify_connect override", async () => {
+    const post = vi.fn(async () => ({ data: { id: 9 }, error: undefined, response: new Response("", { status: 200 }) }));
+    const server = new McpServer({ name: "t", version: "0" });
+    const ctx = createServerContext({ config, logger: createLogger("error", () => {}), client: { POST: post } as unknown as AutifyClient });
+    registerExecuteTools(server, ctx);
+    const res = await callTool(server, "autify_execute_schedule", { schedule_id: 42, autify_connect: { name: null } });
+    expect(res.isError).toBeUndefined();
+    expect(post).toHaveBeenCalledWith(
+      "/schedules/{schedule_id}",
+      expect.objectContaining({ body: { autify_connect: { name: null } } }),
+    );
+  });
+
+  it("execute_scenarios strips project_id from the body and defaults execution_type", async () => {
+    const post = vi.fn(async () => ({ data: { id: 5 }, error: undefined, response: new Response("", { status: 200 }) }));
+    const server = new McpServer({ name: "t", version: "0" });
+    const ctx = createServerContext({ config, logger: createLogger("error", () => {}), client: { POST: post } as unknown as AutifyClient });
+    registerExecuteTools(server, ctx);
+    await callTool(server, "autify_execute_scenarios", {
+      project_id: 1, capabilities: [{ os_type: "linux", browser_type: "chrome" }], scenarios: [{ id: 1 }],
+    });
+    const body = (post.mock.calls[0]![1] as { body: Record<string, unknown> }).body;
+    expect(body).not.toHaveProperty("project_id");
+    expect(body.execution_type).toBe("parallel");
+  });
 });

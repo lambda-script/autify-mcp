@@ -9,7 +9,15 @@ import type { ServerContext } from "./context.js";
 
 const RO = { readOnlyHint: true } as const;
 
-/** Throw a mapped error when an openapi-fetch result is not ok; else return data. */
+/**
+ * Throw a mapped error when an openapi-fetch result is not ok; else return data.
+ *
+ * Every Autify for Web endpoint responds 2xx-with-body on success, so `data` is
+ * present on the happy path. The `error !== undefined` clause is belt-and-suspenders
+ * alongside `!response.ok` (they always agree for this spec). If a future spec adds
+ * a 204/empty-body endpoint, revisit: `data` would be undefined and callers that
+ * cast the result would see `{}`.
+ */
 export function unwrap<T>(result: { data?: T; error?: unknown; response: Response }): T {
   if (!result.response.ok || result.error !== undefined) {
     throw mapHttpError(result.response.status, result.error);

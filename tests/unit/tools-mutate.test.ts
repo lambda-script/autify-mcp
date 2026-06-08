@@ -56,4 +56,29 @@ describe("mutation tools", () => {
       expect.objectContaining({ params: { path: { project_id: 1, scenario_id: 3 } } }),
     );
   });
+
+  it("delete_access_point sends the project path and the name body (DELETE-with-body)", async () => {
+    const c = client();
+    const server = new McpServer({ name: "t", version: "0" });
+    const ctx = createServerContext({ config, logger: createLogger("error", () => {}), client: c });
+    registerMutateTools(server, ctx);
+    const res = await callTool(server, "autify_delete_access_point", { project_id: 4, name: "ap-1" });
+    expect(res.isError).toBeUndefined();
+    expect((c as unknown as { DELETE: ReturnType<typeof vi.fn> }).DELETE).toHaveBeenCalledWith(
+      "/projects/{project_id}/autify_connect/access_points",
+      expect.objectContaining({ params: { path: { project_id: 4 } }, body: { name: "ap-1" } }),
+    );
+  });
+
+  it("create_test_plan_variable POSTs key and default_value to the test plan path", async () => {
+    const c = client();
+    const server = new McpServer({ name: "t", version: "0" });
+    const ctx = createServerContext({ config, logger: createLogger("error", () => {}), client: c });
+    registerMutateTools(server, ctx);
+    await callTool(server, "autify_create_test_plan_variable", { test_plan_id: 9, key: "K", default_value: "V" });
+    expect((c as unknown as { POST: ReturnType<typeof vi.fn> }).POST).toHaveBeenCalledWith(
+      "/test_plans/{test_plan_id}/test_plan_variables",
+      expect.objectContaining({ params: { path: { test_plan_id: 9 } }, body: { key: "K", default_value: "V" } }),
+    );
+  });
 });

@@ -23,6 +23,7 @@ export function registerExecuteTools(server: McpServer, ctx: ServerContext): voi
         capabilities: executeScenariosBodySchema.shape.capabilities,
         scenarios: executeScenariosBodySchema.shape.scenarios,
         url_replacements: executeScenariosBodySchema.shape.url_replacements,
+        autify_connect: executeScenariosBodySchema.shape.autify_connect,
       },
     },
     (args) =>

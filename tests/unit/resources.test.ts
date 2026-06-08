@@ -26,4 +26,15 @@ describe("resources", () => {
     const out = await r.readCallback(new URL("autify://project_info"));
     expect(JSON.parse(out.contents[0]!.text)).toEqual({ name: "proj" });
   });
+
+  it("capabilities resource maps an API error to a thrown AutifyMcpError", async () => {
+    const get = vi.fn(async () => ({ data: undefined, error: { message: "no" }, response: new Response("", { status: 404 }) }));
+    const server = new McpServer({ name: "t", version: "0" });
+    registerResources(server, createServerContext({ config, logger: createLogger("error", () => {}), client: { GET: get } as unknown as AutifyClient }));
+    const r = resources(server)["autify://capabilities"]!;
+    await expect(r.readCallback(new URL("autify://capabilities"))).rejects.toMatchObject({
+      name: "AutifyMcpError",
+      code: "not_found",
+    });
+  });
 });
