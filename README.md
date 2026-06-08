@@ -1,6 +1,12 @@
+<p align="center">
+  <img src="https://raw.githubusercontent.com/lambda-script/autify-mcp/main/assets/autify.png" alt="Autify" width="360">
+</p>
+
 # @lambda-script/autify-mcp
 
 An MCP server that exposes the Autify for Web public API to AI agents.
+
+> Unofficial, community-maintained project. Not affiliated with or endorsed by Autify, Inc. "Autify" and the Autify logo are trademarks of their respective owner.
 
 ## Overview
 

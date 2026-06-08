@@ -1,6 +1,12 @@
+<p align="center">
+  <img src="https://raw.githubusercontent.com/lambda-script/autify-mcp/main/assets/autify.png" alt="Autify" width="360">
+</p>
+
 # @lambda-script/autify-mcp
 
 Autify for Web の公開 API を AI エージェントに公開する MCP サーバーです。
+
+> 非公式・コミュニティ運営のプロジェクトです。Autify, Inc. とは提携・承認関係にありません。「Autify」および Autify ロゴは各権利者の商標です。
 
 ## 概要
 
