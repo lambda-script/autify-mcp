@@ -1,7 +1,7 @@
 {
   "name": "@lambda-script/autify-mcp",
   "version": "0.1.0",
-  "description": "MCP server exposing the Autify for Web public API to AI agents (scenarios, results, test execution, and test-plan configuration).",
+  "description": "Unofficial MCP server exposing the Autify for Web public API to AI agents (scenarios, results, test execution, and test-plan configuration). Not affiliated with Autify, Inc.",
   "type": "module",
   "bin": { "autify-mcp": "dist/index.js" },
   "main": "./dist/index.js",
