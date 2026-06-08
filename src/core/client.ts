@@ -1,6 +1,7 @@
 import createClient from "openapi-fetch";
 import type { Client } from "openapi-fetch";
 
+import { AutifyMcpError } from "./types.js";
 import type { paths } from "../generated/autify.js";
 
 export type AutifyClient = Client<paths>;
@@ -17,6 +18,14 @@ export interface RetryingFetchOptions {
 const sleep = (ms: number): Promise<void> =>
   new Promise((resolve) => setTimeout(resolve, ms));
 
+/** Combine our timeout signal with any caller-supplied signal (Node >=20.3). */
+function combineSignals(
+  own: AbortSignal,
+  caller: AbortSignal | null | undefined,
+): AbortSignal {
+  return caller ? AbortSignal.any([own, caller]) : own;
+}
+
 /** Wrap fetch with exponential backoff on retryable statuses + a request timeout. */
 export function createRetryingFetch(opts: RetryingFetchOptions = {}): typeof fetch {
   const innerFetch = opts.fetch ?? fetch;
@@ -31,16 +40,34 @@ export function createRetryingFetch(opts: RetryingFetchOptions = {}): typeof fet
     let lastResponse: Response | undefined;
     for (let attempt = 0; attempt <= retries; attempt += 1) {
       const controller = new AbortController();
-      const timer = setTimeout(() => controller.abort(), timeoutMs);
+      let timedOut = false;
+      const timer = setTimeout(() => {
+        timedOut = true;
+        controller.abort();
+      }, timeoutMs);
       try {
-        const res = await innerFetch(input, { ...init, signal: controller.signal });
-        if (!RETRYABLE_STATUS.has(res.status) || attempt === retries) return res;
+        const res = await innerFetch(input, {
+          ...init,
+          signal: combineSignals(controller.signal, init?.signal),
+        });
+        if (!RETRYABLE_STATUS.has(res.status)) return res;
         lastResponse = res;
+      } catch (error: unknown) {
+        // Our timeout fired — surface a stable, wrapped error instead of a raw
+        // AbortError. A caller-initiated abort is rethrown unchanged.
+        if (timedOut) {
+          throw new AutifyMcpError(`Autify API request timed out after ${timeoutMs}ms.`, {
+            code: "timeout",
+            hint: "Increase the timeout or check Autify API availability.",
+          });
+        }
+        throw error;
       } finally {
         clearTimeout(timer);
       }
-      await sleep(baseDelayMs * 2 ** attempt);
+      if (attempt < retries) await sleep(baseDelayMs * 2 ** attempt);
     }
+    // Reached only when every attempt returned a retryable status: return the last one.
     return lastResponse as Response;
   };
   return wrapped as typeof fetch;

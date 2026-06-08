@@ -53,7 +53,10 @@ function redactInternal(
   }
   const out: Record<string, unknown> = {};
   for (const [key, child] of Object.entries(value)) {
-    out[key] = redactInternal(child, SECRET_KEY_PATTERN.test(key), seen);
+    // Once inside a secret-keyed value, keep redacting descendants even if their
+    // own keys don't look secret (e.g. { authorization: { bearer: "..." } }).
+    const childSecret = parentKeyIsSecret || SECRET_KEY_PATTERN.test(key);
+    out[key] = redactInternal(child, childSecret, seen);
   }
   return out;
 }

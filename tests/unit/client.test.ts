@@ -25,6 +25,30 @@ describe("createRetryingFetch", () => {
     expect(res.status).toBe(404);
     expect(inner).toHaveBeenCalledTimes(1);
   });
+
+  it("returns the last response after exhausting retries on 503", async () => {
+    const inner = vi.fn(async () => jsonResponse(503, { message: "down" }));
+    const fetchFn = createRetryingFetch({ fetch: inner, retries: 2, baseDelayMs: 0 });
+    const res = await fetchFn("https://x/api", {});
+    expect(res.status).toBe(503);
+    expect(inner).toHaveBeenCalledTimes(3); // initial + 2 retries
+  });
+
+  it("wraps a timeout as an AutifyMcpError with code 'timeout'", async () => {
+    const inner = vi.fn(
+      (_input: string | URL | Request, init?: RequestInit) =>
+        new Promise<Response>((_resolve, reject) => {
+          init?.signal?.addEventListener("abort", () =>
+            reject(new DOMException("aborted", "AbortError")),
+          );
+        }),
+    );
+    const fetchFn = createRetryingFetch({ fetch: inner, retries: 0, timeoutMs: 5 });
+    await expect(fetchFn("https://x/api", {})).rejects.toMatchObject({
+      name: "AutifyMcpError",
+      code: "timeout",
+    });
+  });
 });
 
 describe("createAutifyClient", () => {

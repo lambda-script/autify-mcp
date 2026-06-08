@@ -36,8 +36,8 @@ export function mapHttpError(status: number, body: unknown): AutifyMcpError {
       ? { code: "unauthorized", hint: "Check AUTIFY_API_TOKEN is valid and authorized." }
       : status === 404
         ? { code: "not_found", hint: "Check the project/scenario/result id." }
-        : status === 422
-          ? { code: "invalid_input", hint: "Check the request parameters." }
+        : status === 400 || status === 422
+          ? { code: "invalid_input", hint: "Check the request parameters (e.g. invalid or duplicate values)." }
           : status === 429
             ? { code: "rate_limited", hint: "Slow down; honor Retry-After." }
             : { code: "upstream", hint: "Autify API error. Retry later." };
