@@ -1,0 +1,48 @@
+{
+  "name": "@lambda-script/autify-mcp",
+  "version": "0.1.0",
+  "description": "MCP server exposing the Autify for Web public API to AI agents (scenarios, results, test execution, and test-plan configuration).",
+  "type": "module",
+  "bin": { "autify-mcp": "dist/index.js" },
+  "main": "./dist/index.js",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": { ".": { "import": "./dist/index.js", "types": "./dist/index.d.ts" } },
+  "files": ["dist", "openapi"],
+  "scripts": {
+    "generate": "openapi-typescript openapi/swagger.yml -o src/generated/autify.d.ts",
+    "prebuild": "npm run generate",
+    "build": "tsup",
+    "dev": "tsup --watch",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:coverage": "vitest run --coverage",
+    "lint": "eslint src/",
+    "typecheck": "tsc --noEmit",
+    "prepublishOnly": "npm run build"
+  },
+  "keywords": ["mcp", "model-context-protocol", "autify", "e2e", "testing", "claude", "anthropic"],
+  "author": "lambda-script",
+  "license": "MIT",
+  "repository": { "type": "git", "url": "git+https://github.com/lambda-script/autify-mcp.git" },
+  "homepage": "https://github.com/lambda-script/autify-mcp#readme",
+  "bugs": { "url": "https://github.com/lambda-script/autify-mcp/issues" },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.0.0",
+    "openapi-fetch": "^0.17.0",
+    "zod": "^3.23.8"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.17.0",
+    "@types/node": "^22.10.0",
+    "@vitest/coverage-v8": "^2.1.8",
+    "eslint": "^9.17.0",
+    "openapi-typescript": "^7.13.0",
+    "tsup": "^8.3.5",
+    "tsx": "^4.19.2",
+    "typescript": "^5.7.2",
+    "typescript-eslint": "^8.18.0",
+    "vitest": "^2.1.8"
+  },
+  "engines": { "node": ">=20.0.0" }
+}
