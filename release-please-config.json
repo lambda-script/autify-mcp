@@ -1,0 +1,4 @@
+{
+  "packages": { ".": { "release-type": "node", "package-name": "@lambda-script/autify-mcp" } },
+  "$schema": "https://raw.githubusercontent.com/googleapis/release-please/main/schemas/config.json"
+}
